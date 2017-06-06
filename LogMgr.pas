@@ -35,7 +35,7 @@ var
 begin
   InitializeCriticalSection(_lock);
 
-{$IFNDEF RELEASE}
+{$IFNDEF RELEASE_BUILD}
   assignfile(f, 'userdata\launcher.log');
   try
     rewrite(f);
@@ -54,7 +54,7 @@ procedure FZLogMgr.Write(data:string; severity:FZLogMessageSeverity);
 var
   f:textfile;
 begin
-{$IFNDEF RELEASE}
+{$IFNDEF RELEASE_BUILD}
   EnterCriticalSection(_lock);
   try
       assignfile(f, 'userdata\launcher.log');
