@@ -24,7 +24,7 @@ const
 
   ENGINE_PATH:PChar='bin\xrEngine.exe';
 
-
+  GITHUB_EMERGENCY_URL='https://raw.githubusercontent.com/FreeZoneMods/guns_cs/master/stcs_emergency/update';
   GAMEPOLIS_EMERGENCY_URL='http://stalker.gamepolis.ru/stcs_emergency/update';
   STAGILA_EMERGENCY_URL='http://stalker.stagila.ru:8080/stcs_emergency/update';
 
@@ -46,6 +46,9 @@ var
   _ApplyUpdate: function():boolean; stdcall;
   updater_hndl:THandle;
   need_run:boolean;
+
+  urls:array of string;
+  i:integer;
 begin
   LogMgr.Init();
   need_run:=true;
@@ -91,32 +94,31 @@ begin
     path_string:=path_string+'\';
   end;
 
+  setlength(urls, 3);
+  urls[0]:=GITHUB_EMERGENCY_URL;
+  urls[1]:=GAMEPOLIS_EMERGENCY_URL;
+  urls[2]:=STAGILA_EMERGENCY_URL;
 
   th:=FZDownloaderThread.Create(path_string+GAMESPY_MODULE);
-  dl:=FZFileDownloader.Create(GAMEPOLIS_EMERGENCY_URL, path_string+EMERGENCY_FILENAME, 0, th);
-  update_loaded := dl.StartSyncDownload();
-
-  if not update_loaded then begin
-    dl.Free;
-    dl:=FZFileDownloader.Create(STAGILA_EMERGENCY_URL, path_string+EMERGENCY_FILENAME, 0, th);
-    update_loaded := dl.StartSyncDownload();
-  end;
-
-  th.Free;
-
-  //If updater present - run it
-  if update_loaded then begin
-    updater_hndl:=LoadLibrary(PChar(path_string+EMERGENCY_FILENAME));
-    if updater_hndl<>0 then begin
-      _ApplyUpdate:=GetProcAddress( updater_hndl, PChar(EMERGENCY_FUN));
-      if @_ApplyUpdate<>nil then begin
-        need_run:=_ApplyUpdate();
+  for i:=0 to length(urls)-1 do begin
+    dl:=FZFileDownloader.Create(urls[i], path_string+EMERGENCY_FILENAME, 0, th);
+    if dl.StartSyncDownload() then begin
+      updater_hndl:=LoadLibrary(PChar(path_string+EMERGENCY_FILENAME));
+      if updater_hndl<>0 then begin
+        _ApplyUpdate:=GetProcAddress( updater_hndl, PChar(EMERGENCY_FUN) );
+        if @_ApplyUpdate<>nil then begin
+          need_run:=_ApplyUpdate();
+          FreeLibrary(updater_hndl);
+          DeleteFile(PChar(path_string+EMERGENCY_FILENAME));
+          break;
+        end;
+        FreeLibrary(updater_hndl);
       end;
-      FreeLibrary(updater_hndl);
     end;
+    dl.Free();
+    DeleteFile(PChar(path_string+EMERGENCY_FILENAME));
   end;
-
-  DeleteFile(PChar(path_string+EMERGENCY_FILENAME));
+  th.Free;
 
   if need_run then begin
     FillMemory(@pi, sizeof(pi), 0);
@@ -127,6 +129,7 @@ begin
   end;
 
   setlength(path, 0);
+  setlength(urls, 0);
 
   LogMgr.Free;
 end.
