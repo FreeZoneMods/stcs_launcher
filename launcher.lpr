@@ -24,7 +24,6 @@ const
 
   ENGINE_PATH:PChar='bin\xrEngine.exe';
 
-  GITHUB_EMERGENCY_URL='https://raw.githubusercontent.com/FreeZoneMods/guns_cs/master/stcs_emergency/update';
   GAMEPOLIS_EMERGENCY_URL='http://stalker.gamepolis.ru/stcs_emergency/update';
   STAGILA_EMERGENCY_URL='http://stalker.stagila.ru:8080/stcs_emergency/update';
 
@@ -94,10 +93,9 @@ begin
     path_string:=path_string+'\';
   end;
 
-  setlength(urls, 3);
-  urls[0]:=GITHUB_EMERGENCY_URL;
-  urls[1]:=GAMEPOLIS_EMERGENCY_URL;
-  urls[2]:=STAGILA_EMERGENCY_URL;
+  setlength(urls, 2);
+  urls[0]:=GAMEPOLIS_EMERGENCY_URL;
+  urls[1]:=STAGILA_EMERGENCY_URL;
 
   th:=FZDownloaderThread.Create(path_string+GAMESPY_MODULE);
   for i:=0 to length(urls)-1 do begin
